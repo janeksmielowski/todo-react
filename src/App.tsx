@@ -24,7 +24,7 @@ const App: FC = () => {
       </Box>
       <TodoContainer
         todos={todos}
-        handleChecked={(id) => () => send("TOGGLE_TODO", { todoId: id })}
+        handleChecked={(id) => send("TOGGLE_TODO", { todoId: id })}
         handleDelete={(id) => send("CHOOSE_DELETE_TODO", { todoId: id })}
       />
       <Tooltip title="Add todo">

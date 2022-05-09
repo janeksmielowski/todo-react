@@ -39,7 +39,7 @@ it('should render no todos', () => {
 });
 
 it('should add new todo', async () => {
-  const { findByTestId, getAllByTestId, getByTestId, getByText, queryAllByTestId } = render(<App/>);
+  const { findByTestId, getAllByTestId, getByTestId, queryAllByTestId } = render(<App/>);
 
   const openAddTodoModalButton = getByTestId('open-add-todo-modal-button');
   fireEvent.click(openAddTodoModalButton);
@@ -74,4 +74,17 @@ it('should delete todo', async () => {
 
   await waitFor(() => expect(deleteTodoModalContent).not.toBeInTheDocument());
   await waitFor(() => expect(queryAllByTestId('todo')).toHaveLength(2));
+});
+
+it('should check todo', async () => {
+  const { getAllByTestId, queryAllByTestId } = render(<App/>);
+
+  const checkbox = getAllByTestId('todo-checkbox')[0];
+  expect(checkbox).not.toBeChecked();
+
+  fireEvent.click(checkbox);
+  await waitFor(() => expect(queryAllByTestId('todo-checkbox')[0]).toBeChecked());
+
+  fireEvent.click(checkbox);
+  await waitFor(() => expect(queryAllByTestId('todo-checkbox')[0]).not.toBeChecked());
 });

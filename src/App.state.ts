@@ -49,6 +49,7 @@ const appMachine = createMachine<AppContext, AppEvent>({
                     target: "chooseAction",
                     actions: assign({
                         todos: (context, { todoId }) => {
+                            debugger
                             return context.todos.map(todo => {
                                 if (todo.id === todoId) {
                                     return { ...todo, completed: !todo.completed };

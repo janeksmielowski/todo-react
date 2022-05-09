@@ -37,7 +37,12 @@ const Todo: FC<TodoProps> = (props) => {
         <Tooltip
           title={`Mark as ${props.completed ? "incompleted" : "completed"}`}
         >
-          <Checkbox checked={props.completed} onChange={props.handleChecked} />
+          <Checkbox
+            // @ts-ignore
+            inputProps={{ "data-testid": "todo-checkbox" }}
+            checked={props.completed}
+            onChange={props.handleChecked}
+          />
         </Tooltip>
         <Typography
           variant="body1"
