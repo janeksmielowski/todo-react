@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { FC } from "react";
-import { Todo as TodoContract } from "./App.state";
+import { TodoContract } from "./App.types";
 
 interface TodoProps extends TodoContract {
   handleChecked: () => void;
@@ -35,19 +35,19 @@ const Todo: FC<TodoProps> = (props) => {
         }}
       >
         <Tooltip
-          title={`Mark as ${props.completed ? "incompleted" : "completed"}`}
+          title={`Mark as ${props.done ? "undone" : "done"}`}
         >
           <Checkbox
             // @ts-ignore
             inputProps={{ "data-testid": "todo-checkbox" }}
-            checked={props.completed}
+            checked={props.done}
             onChange={props.handleChecked}
           />
         </Tooltip>
         <Typography
           variant="body1"
           sx={{
-            textDecoration: props.completed ? "line-through" : undefined,
+            textDecoration: props.done ? "line-through" : undefined,
           }}
         >
           {props.text}

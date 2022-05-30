@@ -1,12 +1,12 @@
 import { Box, Container, Grid, Typography } from "@mui/material";
 import { FC } from "react";
-import { Todo as TodoContract } from "./App.state";
+import { TodoContract } from "./App.types";
 import Todo from "./Todo";
 
 interface TodoContainerProps {
     todos: TodoContract[];
-    handleChecked: (id: number) => void;
-    handleDelete: (id: number) => void;
+    handleChecked: (id: string) => void;
+    handleDelete: (id: string) => void;
 }
 
 const TodoContainer: FC<TodoContainerProps> = (props) => {

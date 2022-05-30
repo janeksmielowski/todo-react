@@ -1,39 +1,41 @@
 import { assign, createMachine } from "xstate";
-
-export interface Todo {
-    id: number;
-    text: string;
-    completed: boolean;
-}
+import { createTodo, deleteTodo, getTodos, toggleTodo } from "./App.gateway";
+import { TodoContract } from "./App.types";
 
 interface AppContext {
-    nextTodoId: number;
-    todos: Todo[];
-    deleteTodoId?: number;
+    todos: TodoContract[];
+    editedTodoId?: string;
 }
 
 type AppEvent =
     | { type: "CHOOSE_ADD_TODO" }
     | { type: "ADD_TODO", todoText: string }
-    | { type: "CHOOSE_DELETE_TODO", todoId: number }
+    | { type: "CHOOSE_DELETE_TODO", todoId: string }
     | { type: "DELETE_TODO" }
+    | { type: "CHOOSE_TOGGLE_TODO", todoId: string }
     | { type: "CANCEL" }
-    | { type: "TOGGLE_TODO", todoId: number }
-
-const INITIAL_TODOS: Todo[] = [
-    { id: 0, text: 'Do the shopping', completed: false },
-    { id: 1, text: 'Go to the gym', completed: false },
-    { id: 2, text: 'Learn for the exam', completed: false },
-];
 
 const appMachine = createMachine<AppContext, AppEvent>({
     id: "app",
     context: {
-        nextTodoId: INITIAL_TODOS.length,
-        todos: INITIAL_TODOS,
+        todos: [],
     },
-    initial: 'chooseAction',
+    initial: 'init',
     states: {
+        init: {
+            invoke: {
+                src: getTodos,
+                onDone: {
+                    target: 'chooseAction',
+                    actions: assign({
+                        todos: (_, event) => event.data.data,
+                    }),
+                },
+                onError: {
+                    target: 'error',
+                },
+            },
+        },
         chooseAction: {
             on: {
                 CHOOSE_ADD_TODO: {
@@ -42,21 +44,13 @@ const appMachine = createMachine<AppContext, AppEvent>({
                 CHOOSE_DELETE_TODO: {
                     target: "deleteTodo",
                     actions: assign({
-                        deleteTodoId: (_, { todoId }) => todoId,
+                        editedTodoId: (_, { todoId }) => todoId,
                     }),
                 },
-                TOGGLE_TODO: {
-                    target: "chooseAction",
+                CHOOSE_TOGGLE_TODO: {
+                    target: "loadingToggleTodo",
                     actions: assign({
-                        todos: (context, { todoId }) => {
-                            debugger
-                            return context.todos.map(todo => {
-                                if (todo.id === todoId) {
-                                    return { ...todo, completed: !todo.completed };
-                                }
-                                return todo;
-                            });
-                        },
+                        editedTodoId: (_, { todoId }) => todoId,
                     }),
                 },
             },
@@ -64,41 +58,76 @@ const appMachine = createMachine<AppContext, AppEvent>({
         addTodo: {
             on: {
                 ADD_TODO: {
-                    target: "chooseAction",
-                    actions: assign({
-                        todos: (context, { todoText }) => {
-                            const todo = {
-                                id: context.nextTodoId,
-                                text: todoText,
-                                completed: false,
-                            };
-                            return [...context.todos, todo];
-                        },
-                        nextTodoId: (context) => context.nextTodoId + 1,
-                    }),
+                    target: "loadingAddTodo",
                 },
                 CANCEL: {
                     target: "chooseAction",
+                },
+            },
+        },
+        loadingAddTodo: {
+            invoke: {
+                src: (_, { todoText }: any) => createTodo(todoText),
+                onDone: {
+                    target: "chooseAction",
+                    actions: assign({
+                        todos: (_, event) => event.data.data,
+                    }),
+                },
+                onError: {
+                    target: "error",
+                },
+            },
+        },
+        loadingToggleTodo: {
+            invoke: {
+                src: (context) => {
+                    const doneStatus = context.todos.find(todo => todo.id === context.editedTodoId!)?.done;
+                    return doneStatus !== undefined ? toggleTodo(context.editedTodoId!, !doneStatus) : Promise.resolve();
+                },
+                onDone: {
+                    target: "chooseAction",
+                    actions: assign({
+                        todos: (_, event) => event.data.data,
+                    }),
+                },
+                onError: {
+                    target: "error",
                 },
             },
         },
         deleteTodo: {
             on: {
                 DELETE_TODO: {
-                    target: "chooseAction",
-                    actions: assign({
-                        todos: (context) => {
-                            return context.todos.filter(
-                                (todo) => todo.id !== context.deleteTodoId
-                            );
-                        },
-                    }),
+                    target: "loadingDeleteTodo",
                 },
                 CANCEL: {
                     target: "chooseAction",
                 },
             },
         },
+        loadingDeleteTodo: {
+            invoke: {
+                src: (context) => deleteTodo(context.editedTodoId!),
+                onDone: {
+                    target: "chooseAction",
+                    actions: assign({
+                        todos: (context) => {
+                            return context.todos.filter(
+                                (todo) => todo.id !== context.editedTodoId
+                            );
+                        },
+                        editedTodoId: (_) => undefined,
+                    }),
+                },
+                onError: {
+                    target: "error",
+                },
+            },
+        },
+        error: {
+            type: "final",
+        }
     },
 })
 

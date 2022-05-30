@@ -1,5 +1,5 @@
 import { Add } from "@mui/icons-material";
-import { AppBar, Box, Fab, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Box, CircularProgress, Fab, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMachine } from "@xstate/react";
 import { FC } from "react";
 import AddTodoModal from "./AddTodoModal";
@@ -13,6 +13,8 @@ const App: FC = () => {
     context: { todos },
   } = state;
 
+  const shouldRenderLoader = (state.value as string).match(/(init|loading)/);
+
   return (
     <Box>
       <Box>
@@ -24,9 +26,14 @@ const App: FC = () => {
       </Box>
       <TodoContainer
         todos={todos}
-        handleChecked={(id) => send("TOGGLE_TODO", { todoId: id })}
+        handleChecked={(id) => send("CHOOSE_TOGGLE_TODO", { todoId: id })}
         handleDelete={(id) => send("CHOOSE_DELETE_TODO", { todoId: id })}
       />
+      {shouldRenderLoader && (
+        <Box sx={{ marginTop: "1rem", textAlign: "center" }}>
+          <CircularProgress />
+        </Box>
+      )}
       <Tooltip title="Add todo">
         <Fab
           data-testid="open-add-todo-modal-button"
