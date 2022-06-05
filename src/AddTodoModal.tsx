@@ -39,6 +39,12 @@ const AddTodoModal: FC<AddTodoModalProps> = (props) => {
     handleValidation(newText);
   };
 
+  const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleAddTodo();
+    }
+  };
+
   const handleAddTodo = () => {
     if (text && text.trim().length > 0) {
       clearState();
@@ -64,6 +70,7 @@ const AddTodoModal: FC<AddTodoModalProps> = (props) => {
           onBlur={() => handleValidation(text)}
           onChange={handleChange}
           onFocus={() => setText("")}
+          onKeyUp={handleKeyUp}
           placeholder="What do you want to do?"
           type="text"
           value={text || ""}

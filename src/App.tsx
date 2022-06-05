@@ -1,18 +1,43 @@
 import { Add } from "@mui/icons-material";
-import { AppBar, Box, CircularProgress, Fab, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Box, CircularProgress, Container, Fab, Tab, Tabs, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMachine } from "@xstate/react";
-import { FC } from "react";
+import { FC, useState } from "react";
 import AddTodoModal from "./AddTodoModal";
 import appMachine from "./App.state";
 import DeleteTodoModal from "./DeleteTodoModal";
 import TodoContainer from "./TodoContainer";
 
+enum TabVariant {
+  Todo,
+  Done,
+  All
+}
+
 const App: FC = () => {
   const [state, send] = useMachine(appMachine);
+
   const {
     context: { todos },
   } = state;
 
+  const [tabIndex, setTabIndex] = useState(TabVariant.Todo);
+
+  const handleTabChange = (event: React.ChangeEvent<{}>, newTabIndex: number) => {
+    setTabIndex(newTabIndex);
+  };
+
+  const getFilteredTodos = () => {
+    switch (tabIndex) {
+      case TabVariant.Todo:
+        return todos.filter(todo => !todo.done);
+      case TabVariant.Done:
+        return todos.filter(todo => todo.done);
+      case TabVariant.All:
+      default:
+        return todos;
+    }
+  };
+  
   const shouldRenderLoader = (state.value as string).match(/(init|loading)/);
 
   return (
@@ -24,8 +49,15 @@ const App: FC = () => {
           </Toolbar>
         </AppBar>
       </Box>
+      <Container>
+        <Tabs value={tabIndex} onChange={handleTabChange} variant="fullWidth">
+          <Tab label="To do"/>
+          <Tab label="Done"/>
+          <Tab label="All"/>
+        </Tabs>
+      </Container>
       <TodoContainer
-        todos={todos}
+        todos={getFilteredTodos()}
         handleChecked={(id) => send("CHOOSE_TOGGLE_TODO", { todoId: id })}
         handleDelete={(id) => send("CHOOSE_DELETE_TODO", { todoId: id })}
       />
